@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#d4af37" />
+  <title>Arc Badlands CommPlex</title>
+  <link rel="manifest" href="/pwa/manifest.json" />
+  <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
+  <style>
+    /* ── Design Tokens ─────────────────────────────────── */
+    :root {
+      --bg:           #0a0a0f;
+      --surface:      #14141e;
+      --surface-2:    #1e1e2e;
+      --gold:         #d4af37;
+      --gold-dim:     #8a7020;
+      --green:        #22c55e;
+      --red:          #ef4444;
+      --amber:        #f59e0b;
+      --text:         #e2e8f0;
+      --text-muted:   #64748b;
+      --border:       #2a2a3e;
+      --radius:       10px;
+      --font:         'Inter', system-ui, -apple-system, sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── Header ────────────────────────────────────────── */
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--gold-dim);
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .logo {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--gold);
+      letter-spacing: 0.5px;
+    }
+    .logo span { color: var(--text-muted); font-weight: 400; font-size: 0.8rem; margin-left: 8px; }
+    .status-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--green);
+      display: inline-block;
+      margin-right: 6px;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.4; }
+    }
+
+    /* ── Navigation tabs ───────────────────────────────── */
+    nav {
+      display: flex;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      overflow-x: auto;
+    }
+    nav button {
+      flex: 1;
+      min-width: 80px;
+      padding: 12px 8px;
+      background: none;
+      border: none;
+      border-bottom: 3px solid transparent;
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    nav button.active {
+      color: var(--gold);
+      border-bottom-color: var(--gold);
+    }
+    nav button:hover { color: var(--text); }
+
+    /* ── Main Content ──────────────────────────────────── */
+    main { padding: 16px; max-width: 900px; margin: 0 auto; }
+
+    /* ── Stats Bar ─────────────────────────────────────── */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    @media (max-width: 500px) { .stats { grid-template-columns: repeat(2, 1fr); } }
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px;
+      text-align: center;
+    }
+    .stat-card .value { font-size: 1.8rem; font-weight: 700; line-height: 1; }
+    .stat-card .label { font-size: 0.7rem; color: var(--text-muted); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.8px; }
+    .stat-card.qualified .value { color: var(--green); }
+    .stat-card.pending   .value { color: var(--gold); }
+    .stat-card.rejected  .value { color: var(--red); }
+    .stat-card.review    .value { color: var(--amber); }
+
+    /* ── Filter bar ────────────────────────────────────── */
+    .filter-bar {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+    .filter-btn {
+      padding: 6px 14px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .filter-btn.active { background: var(--gold); border-color: var(--gold); color: #000; font-weight: 600; }
+
+    /* ── Lead Cards ────────────────────────────────────── */
+    .leads-grid { display: flex; flex-direction: column; gap: 10px; }
+    .lead-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      transition: border-color 0.2s;
+    }
+    .lead-card:hover { border-color: var(--gold-dim); }
+    .lead-card.qualified { border-left: 4px solid var(--green); }
+    .lead-card.rejected  { border-left: 4px solid var(--red); }
+    .lead-card.manual_review { border-left: 4px solid var(--amber); }
+    .lead-card.pending   { border-left: 4px solid var(--text-muted); }
+
+    .lead-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 8px;
+    }
+    .lead-name { font-weight: 600; font-size: 1rem; }
+    .lead-badge {
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .badge-QUALIFIED     { background: rgba(34,197,94,0.2); color: var(--green); }
+    .badge-REJECTED      { background: rgba(239,68,68,0.2); color: var(--red); }
+    .badge-MANUAL_REVIEW { background: rgba(245,158,11,0.2); color: var(--amber); }
+    .badge-PENDING       { background: rgba(100,116,139,0.2); color: var(--text-muted); }
+
+    .lead-details {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4px 16px;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+    .lead-details .highlight { color: var(--gold); font-weight: 600; }
+    .lead-price { font-size: 1.3rem; font-weight: 700; color: var(--gold); }
+
+    .lead-actions { margin-top: 12px; display: flex; gap: 8px; }
+    .btn {
+      padding: 7px 14px;
+      border-radius: 6px;
+      border: none;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    .btn:hover { opacity: 0.85; }
+    .btn-gold  { background: var(--gold); color: #000; }
+    .btn-ghost { background: var(--surface-2); color: var(--text); border: 1px solid var(--border); }
+
+    /* ── Loading / Empty ───────────────────────────────── */
+    .loading, .empty {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-muted);
+    }
+    .loading::after { content: ''; animation: dots 1.2s infinite; }
+    @keyframes dots {
+      0%   { content: '.'; }
+      33%  { content: '..'; }
+      66%  { content: '...'; }
+    }
+
+    /* ── Config Banner ─────────────────────────────────── */
+    .config-banner {
+      background: rgba(212,175,55,0.08);
+      border: 1px solid var(--gold-dim);
+      border-radius: var(--radius);
+      padding: 12px 16px;
+      margin-bottom: 16px;
+      font-size: 0.85rem;
+    }
+    .config-banner strong { color: var(--gold); }
+
+    /* ── Offline Banner ────────────────────────────────── */
+    #offline-banner {
+      display: none;
+      background: var(--red);
+      color: #fff;
+      text-align: center;
+      padding: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+
+<div id="offline-banner">⚡ Offline — Showing cached data</div>
+
+<header>
+  <div class="logo">
+    <span class="status-dot"></span>Arc Badlands CommPlex
+    <span>The Hands</span>
+  </div>
+  <div style="font-size: 0.75rem; color: var(--text-muted);" id="last-updated">—</div>
+</header>
+
+<nav>
+  <button class="active" onclick="switchTab('leads', this)">🏆 Leads</button>
+  <button onclick="switchTab('campaigns', this)">🚗 Campaigns</button>
+  <button onclick="switchTab('settings', this)">⚙️ Settings</button>
+</nav>
+
+<main>
+  <!-- Stats -->
+  <div class="stats" id="stats">
+    <div class="stat-card qualified"><div class="value" id="stat-qualified">—</div><div class="label">Qualified</div></div>
+    <div class="stat-card pending">  <div class="value" id="stat-pending">—</div>  <div class="label">Pending</div></div>
+    <div class="stat-card rejected"> <div class="value" id="stat-rejected">—</div> <div class="label">Rejected</div></div>
+    <div class="stat-card review">   <div class="value" id="stat-review">—</div>   <div class="label">Review</div></div>
+  </div>
+
+  <!-- Filter -->
+  <div class="filter-bar" id="filter-bar">
+    <button class="filter-btn active" onclick="filterLeads('ALL', this)">All</button>
+    <button class="filter-btn" onclick="filterLeads('QUALIFIED', this)">✅ Qualified</button>
+    <button class="filter-btn" onclick="filterLeads('MANUAL_REVIEW', this)">⚠️ Review</button>
+    <button class="filter-btn" onclick="filterLeads('PENDING', this)">🕐 Pending</button>
+    <button class="filter-btn" onclick="filterLeads('REJECTED', this)">❌ Rejected</button>
+  </div>
+
+  <!-- Leads tab -->
+  <div id="tab-leads">
+    <div class="leads-grid" id="leads-grid">
+      <div class="loading">Loading leads</div>
+    </div>
+  </div>
+
+  <!-- Campaigns tab -->
+  <div id="tab-campaigns" style="display:none;">
+    <div id="campaigns-grid" class="leads-grid">
+      <div class="loading">Loading campaigns</div>
+    </div>
+  </div>
+
+  <!-- Settings tab -->
+  <div id="tab-settings" style="display:none;">
+    <div class="config-banner">
+      <strong>⚙️ CommPlex Edge Configuration</strong><br>
+      Configure your API gateway URL to connect this dashboard to CommPlexAPI.
+    </div>
+    <div style="background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:20px;">
+      <label style="display:block; margin-bottom:8px; font-size:0.85rem; color:var(--text-muted);">API Gateway URL</label>
+      <input id="api-url-input" type="url" value=""
+        style="width:100%; padding:10px; background:var(--surface-2); border:1px solid var(--border); border-radius:6px; color:var(--text); font-size:0.9rem; margin-bottom:12px;"
+        placeholder="http://localhost:8080" />
+      <button class="btn btn-gold" onclick="saveSettings()">Save & Reconnect</button>
+      <div id="settings-status" style="margin-top:10px; font-size:0.8rem; color:var(--text-muted);"></div>
+
+      <hr style="border-color:var(--border); margin:20px 0;" />
+
+      <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:8px;"><strong style="color:var(--text);">Push Notifications</strong></div>
+      <button class="btn btn-ghost" onclick="requestNotificationPermission()" id="notif-btn">Enable Push Notifications</button>
+      <div id="notif-status" style="margin-top:8px; font-size:0.8rem; color:var(--text-muted);"></div>
+    </div>
+  </div>
+</main>
+
+<script>
+  // ── Config ──────────────────────────────────────────────────────────────────
+  const API_URL_KEY = 'commplex_api_url';
+  let API_BASE      = localStorage.getItem(API_URL_KEY) || 'http://localhost:8080';
+  let allLeads      = [];
+  let currentFilter = 'ALL';
+
+  document.getElementById('api-url-input').value = API_BASE;
+
+  // ── Service Worker Registration ─────────────────────────────────────────────
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/pwa/sw.js')
+      .then(reg => {
+        console.log('[CommPlex] SW registered:', reg.scope);
+        // Listen for messages from SW (navigate events)
+        navigator.serviceWorker.addEventListener('message', (event) => {
+          if (event.data?.type === 'NAVIGATE') {
+            handleSWNavigation(event.data.url);
+          }
+        });
+      })
+      .catch(err => console.error('[CommPlex] SW registration failed:', err));
+  }
+
+  // Offline detection
+  window.addEventListener('offline', () => { document.getElementById('offline-banner').style.display = 'block'; });
+  window.addEventListener('online',  () => { document.getElementById('offline-banner').style.display = 'none'; fetchLeads(); });
+
+  // ── Tab switching ────────────────────────────────────────────────────────────
+  function switchTab(name, btn) {
+    document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    ['leads','campaigns','settings'].forEach(t => {
+      document.getElementById(`tab-${t}`).style.display = t === name ? 'block' : 'none';
+    });
+    if (name === 'campaigns') fetchCampaigns();
+  }
+
+  // ── Fetch Leads ──────────────────────────────────────────────────────────────
+  async function fetchLeads() {
+    try {
+      const resp = await fetch(`${API_BASE}/leads?limit=100`);
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      allLeads = await resp.json();
+      renderLeads(allLeads);
+      updateStats(allLeads);
+      document.getElementById('last-updated').textContent =
+        'Updated ' + new Date().toLocaleTimeString();
+    } catch (err) {
+      document.getElementById('leads-grid').innerHTML =
+        `<div class="empty">⚠️ Cannot reach API at <strong>${API_BASE}</strong><br>
+         <small>Start: uvicorn server.main:app --reload</small></div>`;
+    }
+  }
+
+  function filterLeads(status, btn) {
+    currentFilter = status;
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const filtered = status === 'ALL' ? allLeads : allLeads.filter(l => l.status === status);
+    renderLeads(filtered);
+  }
+
+  function renderLeads(leads) {
+    const grid = document.getElementById('leads-grid');
+    if (!leads.length) {
+      grid.innerHTML = '<div class="empty">No leads found</div>';
+      return;
+    }
+    grid.innerHTML = leads.map(lead => `
+      <div class="lead-card ${lead.status.toLowerCase()}">
+        <div class="lead-header">
+          <div class="lead-name">${escHtml(lead.dealer_name)}</div>
+          <span class="lead-badge badge-${lead.status}">${lead.status.replace('_',' ')}</span>
+        </div>
+        <div class="lead-price">${lead.price ? '$' + Number(lead.price).toLocaleString() : 'Price TBD'}</div>
+        <div class="lead-details" style="margin-top:8px;">
+          <div>📅 Year: <span class="highlight">${lead.vehicle_year || '—'}</span></div>
+          <div>📞 ${escHtml(lead.dealer_phone || '—')}</div>
+          <div>🚗 Campaign: ${escHtml(lead.campaign_id)}</div>
+          <div>🕐 ${new Date(lead.created_at).toLocaleDateString()}</div>
+        </div>
+        ${lead.notes ? `<div style="margin-top:8px;font-size:0.78rem;color:var(--text-muted);border-top:1px solid var(--border);padding-top:8px;">${escHtml(lead.notes.substring(0,120))}${lead.notes.length>120?'…':''}</div>` : ''}
+        <div class="lead-actions">
+          ${lead.status === 'QUALIFIED'
+            ? `<button class="btn btn-gold" onclick="callDealer('${escHtml(lead.dealer_phone||'')}')">📞 Call Now</button>`
+            : ''}
+          <button class="btn btn-ghost" onclick="viewTranscript(${lead.id})">📋 Transcript</button>
+          ${lead.status === 'MANUAL_REVIEW'
+            ? `<button class="btn btn-ghost" onclick="approveManual(${lead.id})">✅ Qualify</button>`
+            : ''}
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function updateStats(leads) {
+    const count = s => leads.filter(l => l.status === s).length;
+    document.getElementById('stat-qualified').textContent = count('QUALIFIED');
+    document.getElementById('stat-pending').textContent   = count('PENDING');
+    document.getElementById('stat-rejected').textContent  = count('REJECTED');
+    document.getElementById('stat-review').textContent    = count('MANUAL_REVIEW');
+  }
+
+  // ── Fetch Campaigns ──────────────────────────────────────────────────────────
+  async function fetchCampaigns() {
+    try {
+      const resp = await fetch(`${API_BASE}/campaigns`);
+      const data = await resp.json();
+      const grid = document.getElementById('campaigns-grid');
+      grid.innerHTML = (data.campaigns || []).map(c => `
+        <div class="lead-card">
+          <div class="lead-header">
+            <div class="lead-name">${c.campaign_id}</div>
+            <span style="font-size:0.8rem;color:var(--text-muted);">${c.slug}</span>
+          </div>
+          <div class="lead-details">
+            <div>Vehicle: <span class="highlight">${c.vehicle}</span></div>
+            <div>Contacts: ${c.total_contacts}</div>
+            <div>Pending: ${c.pending}</div>
+            <div>Sent: ${c.sent}</div>
+          </div>
+        </div>
+      `).join('') || '<div class="empty">No campaigns loaded</div>';
+    } catch {
+      document.getElementById('campaigns-grid').innerHTML =
+        '<div class="empty">Cannot reach campaigns endpoint</div>';
+    }
+  }
+
+  // ── Actions ──────────────────────────────────────────────────────────────────
+  function callDealer(phone) {
+    if (phone) window.location.href = `tel:+1${phone.replace(/\D/g,'')}`;
+  }
+
+  async function approveManual(leadId) {
+    if (!confirm('Manually qualify Lead #' + leadId + '?')) return;
+    try {
+      const resp = await fetch(`${API_BASE}/leads/${leadId}/status`, {
+        method: 'PATCH',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({status: 'QUALIFIED', notes: '[Manual approval via CommPlex Edge]'}),
+      });
+      if (resp.ok) { await fetchLeads(); }
+    } catch (e) { alert('Update failed: ' + e.message); }
+  }
+
+  function viewTranscript(leadId) {
+    const lead = allLeads.find(l => l.id === leadId);
+    if (lead?.raw_transcript) {
+      alert(`Lead #${leadId} Transcript:\n\n${lead.raw_transcript}`);
+    } else {
+      alert('No transcript available for Lead #' + leadId);
+    }
+  }
+
+  // ── Settings ─────────────────────────────────────────────────────────────────
+  function saveSettings() {
+    API_BASE = document.getElementById('api-url-input').value.trim();
+    localStorage.setItem(API_URL_KEY, API_BASE);
+    document.getElementById('settings-status').textContent = '✅ Saved. Reconnecting...';
+    setTimeout(() => fetchLeads(), 500);
+  }
+
+  async function requestNotificationPermission() {
+    const btn    = document.getElementById('notif-btn');
+    const status = document.getElementById('notif-status');
+    if (!('Notification' in window)) {
+      status.textContent = '⚠️ Push notifications not supported in this browser.';
+      return;
+    }
+    const perm = await Notification.requestPermission();
+    if (perm === 'granted') {
+      status.textContent = '✅ Push notifications enabled!';
+      btn.textContent    = '🔔 Notifications Active';
+    } else {
+      status.textContent = '❌ Permission denied. Enable in browser settings.';
+    }
+  }
+
+  function handleSWNavigation(url) {
+    const params = new URLSearchParams(url.split('?')[1]);
+    const view   = params.get('view');
+    const id     = params.get('id');
+    if (view === 'leads' && id) {
+      const lead = allLeads.find(l => l.id == id);
+      if (lead) viewTranscript(parseInt(id));
+    }
+  }
+
+  function escHtml(str) {
+    return String(str || '').replace(/[&<>"']/g, c =>
+      ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  // ── Init ─────────────────────────────────────────────────────────────────────
+  fetchLeads();
+  setInterval(fetchLeads, 30000);   // Auto-refresh every 30s
+</script>
+</body>
+</html>

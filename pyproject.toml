@@ -1,0 +1,49 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.backends.legacy:build"
+
+[project]
+name = "arc-badlands-commplex"
+version = "3.0.0"
+description = "Arc Badlands CommPlex — AI-driven vehicle procurement automation"
+authors = [{ name = "Kenyon Jones", email = "kjonesmle@gmail.com" }]
+requires-python = ">=3.11"
+readme = "README.md"
+license = { text = "Private" }
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["CommPlexSpec*", "CommPlexCore*", "CommPlexAPI*", "CommPlexEdge*"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+select = ["E", "F", "W", "I", "UP", "N"]
+ignore = ["E501", "N999"]  # line length handled by black, module names are CommPlex style
+exclude = ["deprecated/", ".venv/", "__pycache__"]
+
+[tool.black]
+line-length = 100
+target-version = ["py311"]
+exclude = "deprecated/"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "-v --tb=short"
+env = [
+  "VERTEX_STATUS=STUB",
+  "DRY_RUN=true",
+  "SLUICE_PRICE_STANDARD=28500",
+  "SLUICE_PRICE_AGGRESSIVE=24000",
+  "SLUICE_MIN_YEAR=2020",
+  "GCP_PROJECT_ID=commplex-493805",
+]
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+ignore_missing_imports = true
+exclude = ["deprecated/"]

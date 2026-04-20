@@ -1,0 +1,53 @@
+{
+  "name": "Arc Badlands CommPlex",
+  "image": "mcr.microsoft.com/devcontainers/python:3.11-bullseye",
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": { "version": "20" },
+    "ghcr.io/devcontainers/features/google-cloud-cli:1": {},
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "ms-python.black-formatter",
+        "charliermarsh.ruff",
+        "ms-azuretools.vscode-docker",
+        "googlecloudtools.cloudcode",
+        "ms-toolsai.jupyter",
+        "eamodio.gitlens",
+        "github.copilot",
+        "mhutchie.git-graph",
+        "aaron-bond.better-comments",
+        "usernamehw.errorlens",
+        "PKief.material-icon-theme",
+        "svelte.svelte-vscode",
+        "bradlc.vscode-tailwindcss"
+      ],
+      "settings": {
+        "python.defaultInterpreterPath": "/workspace/.venv/bin/python",
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "ms-python.black-formatter",
+        "python.linting.ruffEnabled": true,
+        "terminal.integrated.defaultProfile.linux": "bash",
+        "files.watcherExclude": {
+          "**/.venv/**": true,
+          "**/__pycache__/**": true
+        }
+      }
+    }
+  },
+  "postCreateCommand": "bash .devcontainer/setup.sh",
+  "remoteEnv": {
+    "GCP_PROJECT_ID": "commplex-493805",
+    "VERTEX_STATUS": "STUB",
+    "DRY_RUN": "true",
+    "PYTHONPATH": "/workspace"
+  },
+  "forwardPorts": [8080, 3000, 5173],
+  "portsAttributes": {
+    "8080": { "label": "CommPlexAPI (FastAPI)", "onAutoForward": "notify" },
+    "5173": { "label": "CommPlexEdge (Vite/Svelte)", "onAutoForward": "notify" }
+  }
+}
