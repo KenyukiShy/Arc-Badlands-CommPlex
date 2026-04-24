@@ -183,7 +183,6 @@ def gemini_respond(user_msg: str, history: list, channel: str = "sms") -> str:
             generation_config={
                 "max_output_tokens": 300 if channel == "sms" else 150,
                 "temperature": 0.4,
-                "system_instruction": system,
             }
         )
         return response.text.strip()
