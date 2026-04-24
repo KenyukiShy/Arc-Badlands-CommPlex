@@ -165,15 +165,19 @@ def gemini_respond(user_msg: str, history: list, channel: str = "sms") -> str:
     """
     # Build conversation history for Gemini
     channel_note = " Keep reply under 160 chars." if channel == "sms" else " Keep reply under 2 sentences, no lists."
-    contents = [{"role": "user", "parts": [{"text": AUDRY_SYSTEM + channel_note + "\n\nBegin. User says: " + (history[0]["parts"][0] if history else user_msg)}]}]
-    contents.append({"role": "model", "parts": [{"text": "Hi! This is Audry with AutoBäad. How can I help?"}]})
+    # Build prompt: system + history + current message as single string
+    channel_note = " Keep reply under 160 chars, be direct." if channel == "sms" else " Keep reply under 2 sentences."
+    prompt_parts = [AUDRY_SYSTEM + channel_note + "\n\n"]
     for turn in history[-8:]:
-        contents.append({"role": turn["role"], "parts": [{"text": turn["parts"][0]}]})
-    contents.append({"role": "user", "parts": [{"text": user_msg}]})
+        role_label = "Customer" if turn["role"] == "user" else "Audry"
+        prompt_parts.append(f"{role_label}: {turn['parts'][0]}")
+    prompt_parts.append(f"Customer: {user_msg}")
+    prompt_parts.append("Audry:")
+    full_prompt = "\n".join(prompt_parts)
 
     try:
         response = _gemini.generate_content(
-            contents,
+            full_prompt,
             generation_config={
                 "max_output_tokens": 200 if channel == "sms" else 150,
                 "temperature": 0.4,
