@@ -353,3 +353,9 @@ if __name__ == "__main__":
     import uvicorn
     port = int(os.getenv("PORT", 8080))
     uvicorn.run("main:app", host="0.0.0.0", port=port, reload=True)
+
+from server.routes.sms_intake import router as sms_router
+app.include_router(sms_router)
+
+from server.routes.sms_intake import router as sms_router
+app.include_router(sms_router)
