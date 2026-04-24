@@ -51,7 +51,7 @@ PROJECT_ID = os.getenv("GCP_PROJECT_ID", "commplex-493805")
 REGION     = os.getenv("GCP_REGION", "us-central1")
 
 vertexai.init(project=PROJECT_ID, location=REGION)
-_gemini = GenerativeModel("gemini-1.5-flash")
+_gemini = GenerativeModel("gemini-1.5-flash", system_instruction=AUDRY_SYSTEM)
 _db     = firestore.Client(project=PROJECT_ID)
 _tts    = texttospeech.TextToSpeechClient()
 
