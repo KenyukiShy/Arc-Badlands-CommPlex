@@ -402,6 +402,20 @@ def send_outbound_sms(to: str, body: str) -> dict:
 
 # ── HEALTH CHECK ──────────────────────────────────────────────────────────────
 
+
+@router.get("/debug/gemini")
+async def debug_gemini():
+    """Test Gemini directly."""
+    import traceback
+    try:
+        response = _gemini.generate_content(
+            "Say hello from AutoBäad in one sentence.",
+            generation_config={"max_output_tokens": 50, "temperature": 0.4}
+        )
+        return {"status": "ok", "response": response.text}
+    except Exception as e:
+        return {"status": "error", "error": str(e), "trace": traceback.format_exc()}
+
 @router.get("/health/gcp")
 async def health_gcp():
     """Verify GCP services are reachable."""
