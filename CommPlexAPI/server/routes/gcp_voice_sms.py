@@ -51,7 +51,7 @@ PROJECT_ID = os.getenv("GCP_PROJECT_ID", "commplex-493805")
 REGION     = os.getenv("GCP_REGION", "us-central1")
 
 vertexai.init(project=PROJECT_ID, location=REGION)
-_gemini = GenerativeModel("gemini-1.5-flash", system_instruction=AUDRY_SYSTEM)
+_gemini = GenerativeModel("gemini-1.5-flash")
 _db     = firestore.Client(project=PROJECT_ID)
 _tts    = texttospeech.TextToSpeechClient()
 
@@ -164,24 +164,18 @@ def gemini_respond(user_msg: str, history: list, channel: str = "sms") -> str:
     history: list of {"role": "user"|"model", "parts": [str]}
     """
     # Build conversation history for Gemini
-    contents = []
-    for turn in history[-10:]:  # Keep last 10 turns to stay within context
+    channel_note = " Keep reply under 160 chars." if channel == "sms" else " Keep reply under 2 sentences, no lists."
+    contents = [{"role": "user", "parts": [{"text": AUDRY_SYSTEM + channel_note + "\n\nBegin. User says: " + (history[0]["parts"][0] if history else user_msg)}]}]
+    contents.append({"role": "model", "parts": [{"text": "Hi! This is Audry with AutoBäad. How can I help?"}]})
+    for turn in history[-8:]:
         contents.append({"role": turn["role"], "parts": [{"text": turn["parts"][0]}]})
     contents.append({"role": "user", "parts": [{"text": user_msg}]})
-
-    channel_note = ""
-    if channel == "sms":
-        channel_note = "\n\nIMPORTANT: This is an SMS conversation. Keep your response under 160 characters if possible. Be direct."
-    elif channel == "voice":
-        channel_note = "\n\nIMPORTANT: This is a phone call. Speak naturally, conversationally. Keep responses under 2 sentences. Do not use bullet points or lists."
-
-    system = AUDRY_SYSTEM + channel_note
 
     try:
         response = _gemini.generate_content(
             contents,
             generation_config={
-                "max_output_tokens": 300 if channel == "sms" else 150,
+                "max_output_tokens": 200 if channel == "sms" else 150,
                 "temperature": 0.4,
             }
         )
