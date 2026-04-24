@@ -38,8 +38,7 @@ from fastapi.responses import PlainTextResponse, Response
 from twilio.twiml.messaging_response import MessagingResponse
 from twilio.twiml.voice_response import VoiceResponse, Gather, Say, Hangup
 
-import vertexai
-from vertexai.generative_models import GenerativeModel, Part
+import google.generativeai as genai
 from google.cloud import firestore, texttospeech, speech_v1
 from google.cloud import secretmanager
 
@@ -50,8 +49,17 @@ router = APIRouter()
 PROJECT_ID = os.getenv("GCP_PROJECT_ID", "commplex-493805")
 REGION     = os.getenv("GCP_REGION", "us-central1")
 
-vertexai.init(project=PROJECT_ID, location=REGION)
-_gemini = GenerativeModel("gemini-2.0-flash")
+# Load Gemini API key from Secret Manager
+def _load_gemini_key():
+    try:
+        client = secretmanager.SecretManagerServiceClient()
+        name = f"projects/{PROJECT_ID}/secrets/GEMINI_API_KEY/versions/latest"
+        return client.access_secret_version(request={"name": name}).payload.data.decode()
+    except Exception:
+        return os.getenv("GEMINI_API_KEY", "")
+
+genai.configure(api_key=_load_gemini_key())
+_gemini = genai.GenerativeModel("gemini-2.0-flash")
 _db     = firestore.Client(project=PROJECT_ID)
 _tts    = texttospeech.TextToSpeechClient()
 
