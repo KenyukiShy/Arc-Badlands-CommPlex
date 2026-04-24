@@ -55,6 +55,7 @@ logger = logging.getLogger("CommPlexAPI")
 
 # ── App Configuration ─────────────────────────────────────────────────────────
 
+from server.routes.sms_intake import router as sms_router
 app = FastAPI(
     title="Arc Badlands CommPlex API",
     description="The Mouth — FastAPI gateway for telephony, webhooks, and lead management.",
@@ -69,6 +70,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.include_router(sms_router)
 
 # ── Startup ───────────────────────────────────────────────────────────────────
 
@@ -354,8 +356,4 @@ if __name__ == "__main__":
     port = int(os.getenv("PORT", 8080))
     uvicorn.run("main:app", host="0.0.0.0", port=port, reload=True)
 
-from server.routes.sms_intake import router as sms_router
-app.include_router(sms_router)
 
-from server.routes.sms_intake import router as sms_router
-app.include_router(sms_router)
