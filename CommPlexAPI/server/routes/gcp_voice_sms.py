@@ -38,7 +38,8 @@ from fastapi.responses import PlainTextResponse, Response
 from twilio.twiml.messaging_response import MessagingResponse
 from twilio.twiml.voice_response import VoiceResponse, Gather, Say, Hangup
 
-import google.generativeai as genai
+import vertexai
+from vertexai.generative_models import GenerativeModel
 from google.cloud import firestore, texttospeech, speech_v1
 from google.cloud import secretmanager
 
@@ -59,7 +60,7 @@ def _load_gemini_key():
         return os.getenv("GEMINI_API_KEY", "")
 
 genai.configure(api_key=_load_gemini_key())
-_gemini = genai.GenerativeModel("gemini-2.0-flash")
+_gemini = genai.GenerativeModel("gemini-2.0-flash-001")
 _db     = firestore.Client(project=PROJECT_ID)
 _tts    = texttospeech.TextToSpeechClient()
 
