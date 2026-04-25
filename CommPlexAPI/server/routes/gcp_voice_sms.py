@@ -182,7 +182,7 @@ def gemini_respond(user_msg: str, history: list, channel: str = "sms") -> str:
 
     channel_note = ""
     if channel == "sms":
-        channel_note = "\n\nIMPORTANT: This is an SMS conversation. Keep your response under 160 characters if possible. Be direct."
+        channel_note = "\n\nIMPORTANT: This is SMS. Respond in ONE complete sentence under 160 characters. Never cut off mid-sentence. Be direct and finish your thought."
     elif channel == "voice":
         channel_note = "\n\nIMPORTANT: This is a phone call. Speak naturally, conversationally. Keep responses under 2 sentences. Do not use bullet points or lists."
     elif channel == "web":
