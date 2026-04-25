@@ -196,7 +196,7 @@ def gemini_respond(user_msg: str, history: list, channel: str = "sms") -> str:
             contents=contents,
             config=GenerateContentConfig(
                 system_instruction=system,
-                max_output_tokens=300 if channel == "sms" else (150 if channel == "voice" else 600),
+                max_output_tokens=300 if channel == "sms" else (150 if channel == "voice" else 2000),
                 temperature=0.4,
             )
         )
