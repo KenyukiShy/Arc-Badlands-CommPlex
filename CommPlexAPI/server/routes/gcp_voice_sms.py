@@ -185,6 +185,8 @@ def gemini_respond(user_msg: str, history: list, channel: str = "sms") -> str:
         channel_note = "\n\nIMPORTANT: This is an SMS conversation. Keep your response under 160 characters if possible. Be direct."
     elif channel == "voice":
         channel_note = "\n\nIMPORTANT: This is a phone call. Speak naturally, conversationally. Keep responses under 2 sentences. Do not use bullet points or lists."
+    elif channel == "web":
+        channel_note = "\n\nIMPORTANT: This is a web chat. Give complete, helpful responses of 3-5 sentences. Include all relevant vehicle details. Do not truncate."
 
     system = AUDRY_SYSTEM + channel_note
 
@@ -194,7 +196,7 @@ def gemini_respond(user_msg: str, history: list, channel: str = "sms") -> str:
             contents=contents,
             config=GenerateContentConfig(
                 system_instruction=system,
-                max_output_tokens=300 if channel == "sms" else 150,
+                max_output_tokens=300 if channel == "sms" else (150 if channel == "voice" else 600),
                 temperature=0.4,
             )
         )
@@ -433,7 +435,7 @@ async def handle_web_chat(payload: WebChatRequest):
             {"role": m.get("role", "user"), "parts": [m.get("content", "")]}
             for m in payload.history[-10:]
         ]
-        reply = gemini_respond(payload.message, history, channel="sms")
+        reply = gemini_respond(payload.message, history, channel="web")
         return {"status": "ok", "reply": reply}
     except Exception as e:
         return {
