@@ -19,9 +19,6 @@ from twilio.twiml.voice_response import VoiceResponse, Connect
 from google.cloud import speech_v1 as speech
 from google.cloud import texttospeech_v1 as tts
 from google.cloud import firestore
-import vertexai
-from vertexai.generative_models import (
-    GenerativeModel, GenerationConfig, Content, Part
 )
 
 router = APIRouter()
@@ -141,7 +138,6 @@ def transcribe_batch(audio_bytes: bytes) -> str:
 
 def gemini_voice_reply(transcript: str, history: list) -> str:
     vertexai.init(project=PROJECT, location=LOCATION)
-    model = GenerativeModel(
         "gemini-2.0-flash-lite",
         system_instruction=AUDRY_SYSTEM,
     )
@@ -156,7 +152,6 @@ def gemini_voice_reply(transcript: str, history: list) -> str:
     try:
         resp = model.generate_content(
             contents,
-            generation_config=GenerationConfig(
                 max_output_tokens=120,
                 temperature=0.35,
             ),
