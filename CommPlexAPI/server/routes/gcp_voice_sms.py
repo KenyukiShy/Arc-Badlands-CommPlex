@@ -277,6 +277,7 @@ async def handle_sms(request: Request):
     # Send reply via Twilio TwiML
     resp = MessagingResponse()
     resp.message(reply)
+    log_lead(from_number, "sms", body, audry_reply)
     return PlainTextResponse(str(resp), media_type="text/xml")
 
 # ── INBOUND VOICE (Gather Loop) ───────────────────────────────────────────────
