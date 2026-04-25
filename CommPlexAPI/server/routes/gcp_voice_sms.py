@@ -65,6 +65,24 @@ except Exception as _e:
     import sys; print(f"WARN: TTS init: {_e}", file=sys.stderr)
     _tts = None
 
+
+def log_lead(phone: str, channel: str, message: str, reply: str):
+    """Log inbound contact to Firestore for lead tracking."""
+    try:
+        if _db is None:
+            return
+        from datetime import datetime, timezone
+        doc = {
+            "phone": phone,
+            "channel": channel,
+            "message": message[:200],
+            "reply": reply[:200],
+            "ts": datetime.now(timezone.utc).isoformat(),
+        }
+        _db.collection("leads").add(doc)
+    except Exception as e:
+        print(f"WARN: lead log failed: {e}", flush=True)
+
 # ── AUDRY SYSTEM PROMPT ───────────────────────────────────────────────────────
 
 AUDRY_SYSTEM = """You are Audry Harper, AI sales representative for AutoBäad — Kenyon Jones's private vehicle liquidation operation out of Hazen, North Dakota.
@@ -197,6 +215,7 @@ def gemini_respond(user_msg: str, history: list, channel: str = "sms") -> str:
             config=GenerateContentConfig(
                 system_instruction=system,
                 max_output_tokens=500 if channel == "sms" else (150 if channel == "voice" else 2000),
+                thinking_config={"thinking_budget": 0} if channel == "sms" else None,
                 temperature=0.4,
             )
         )
@@ -436,6 +455,7 @@ async def handle_web_chat(payload: WebChatRequest):
             for m in payload.history[-10:]
         ]
         reply = gemini_respond(payload.message, history, channel="web")
+        log_lead(payload.dict().get("phone","web"), "web", payload.message, reply)
         return {"status": "ok", "reply": reply}
     except Exception as e:
         return {
