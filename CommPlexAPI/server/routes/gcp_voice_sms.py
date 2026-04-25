@@ -340,8 +340,12 @@ async def handle_voice_respond(request: Request):
     session = get_call_session(call_sid)
     history = session.get("history", [])
     
-    # Generate Audry's response
-    audry_reply = gemini_respond(speech_input, history, channel="voice")
+    # Generate Audry's response — wrapped so interrupt/crash never kills call
+    try:
+        audry_reply = gemini_respond(speech_input, history, channel="voice")
+    except Exception as e:
+        print(f"[voice error] {e}")
+        audry_reply = "I didn't catch that clearly. What vehicle can I tell you about?"
     
     # Update history
     history.append({"role": "user", "parts": [speech_input]})
