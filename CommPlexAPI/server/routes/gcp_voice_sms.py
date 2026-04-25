@@ -202,7 +202,7 @@ def gemini_respond(user_msg: str, history: list, channel: str = "sms") -> str:
     if channel == "sms":
         channel_note = "\n\nIMPORTANT: This is SMS. Respond in ONE complete sentence under 160 characters. Never cut off mid-sentence. Be direct and finish your thought."
     elif channel == "voice":
-        channel_note = "\n\nIMPORTANT: This is a phone call. Speak naturally, conversationally. Keep responses under 2 sentences. Do not use bullet points or lists."
+        channel_note = "\n\nIMPORTANT: This is a phone call. Give exactly 1-2 SHORT complete sentences. Never list items with numbers. Speak conversationally. End with one question."
     elif channel == "web":
         channel_note = "\n\nIMPORTANT: This is a web chat. Give complete, helpful responses of 3-5 sentences. Include all relevant vehicle details. Do not truncate."
 
@@ -214,7 +214,7 @@ def gemini_respond(user_msg: str, history: list, channel: str = "sms") -> str:
             contents=contents,
             config=GenerateContentConfig(
                 system_instruction=system,
-                max_output_tokens=500 if channel == "sms" else (150 if channel == "voice" else 2000),
+                max_output_tokens=500 if channel == "sms" else (400 if channel == "voice" else 2000),
                 temperature=0.4,
             )
         )
