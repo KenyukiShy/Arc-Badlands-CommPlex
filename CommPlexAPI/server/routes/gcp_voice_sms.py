@@ -115,8 +115,7 @@ THE 4 VEHICLES:
    TITLE: BILL OF SALE ONLY — NO TITLE IN HAND (original retained by shipper, uncooperative seller)
    Car in ND for 13+ months. ND Bonded Title path is next step — NOT filed yet.
    Getting car running required first for ND DMV inspection.
-   12V AGM auxiliary battery is DEAD from sitting — $150-200 fix at any shop.
-   This is NOT the high-voltage hybrid pack — hybrid drivetrain is unaffected.
+   HV hybrid traction battery needs deep cycle recharge (NOT a simple 12V swap). Battery type TBD (AGM glass mat or NiMH). Lucky's Towing, Beulah ND.
    Location: Lucky's Towing & Repair, Beulah ND — direct lot pickup
    ALWAYS disclose title situation proactively and immediately.
    Asking: $4,000–$12,000 (priced to reflect title situation)
