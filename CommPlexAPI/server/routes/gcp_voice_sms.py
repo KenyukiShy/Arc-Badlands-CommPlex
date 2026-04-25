@@ -304,7 +304,7 @@ async def handle_voice_inbound(request: Request):
     )
     # Opening greeting
     gather.say(
-        "Thank you for calling AutoBäad. This is Audry. "
+        "Thank you for calling Auto-Bad. This is Aw-dree. "
         "I can tell you about our vehicles or connect you with Kenyon. How can I help you today?",
         voice="Polly.Joanna",  # AWS Polly via Twilio — sounds natural, no extra cost
     )
@@ -331,7 +331,7 @@ async def handle_voice_respond(request: Request):
     if not speech_input or confidence < 0.3:
         # Didn't catch it — ask again
         gather = Gather(input="speech", action="/voice/respond", method="POST", timeout=5)
-        gather.say("I'm sorry, I didn't catch that. Could you repeat?", voice="Polly.Joanna")
+        gather.say("I didn't quite catch that — could you say that again?", voice="Polly.Joanna")
         resp.append(gather)
         resp.redirect("/voice/twiml", method="POST")
         return Response(content=str(resp), media_type="text/xml")
@@ -406,7 +406,7 @@ async def handle_outbound_call_answer(request: Request):
         language="en-US"
     )
     gather.say(
-        "Hi, this is Audry with AutoBäad — I'm following up on behalf of Kenyon Jones "
+        "Hi, this is Aw-dree with Auto-Bad — I'm following up on behalf of Kenyon Jones "
         "about our vehicle listings. Do you have a moment?",
         voice="Polly.Joanna"
     )
