@@ -1,15 +1,10 @@
-fastapi>=0.104.0
-uvicorn[standard]>=0.24.0
-sqlalchemy>=2.0.0
-pydantic>=2.0.0
-httpx>=0.25.0
-google-cloud-secret-manager>=2.16.0
+# CommPlexAPI/requirements.txt
+fastapi==0.111.0
+uvicorn[standard]==0.29.0
+pydantic>=2.0
+twilio>=9.0.0
 google-genai>=1.0.0
-google-auth>=2.17.0
-google-api-python-client>=2.88.0
-twilio>=8.10.0
-python-dotenv>=1.0.0
-python-multipart>=0.0.7
-google-cloud-firestore>=2.13.0
+google-cloud-firestore>=2.16.0
 google-cloud-texttospeech>=2.16.0
-google-cloud-speech>=2.21.0
+httpx>=0.27.0
+python-multipart>=0.0.9
