@@ -490,7 +490,7 @@ async def health_gcp():
     """Verify GCP services are reachable."""
     status = {"gemini": False, "firestore": False, "tts": False}
     try:
-        _client.models.generate_content(model="gemini-2.0-flash-lite" if channel in ("voice","sms") else "gemini-2.5-flash", contents="ping")
+        _client.models.generate_content(model="gemini-2.0-flash-lite", contents="ping")
         status["gemini"] = True
     except Exception as e:
         status["gemini_error"] = str(e)

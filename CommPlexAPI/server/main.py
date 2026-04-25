@@ -56,6 +56,7 @@ logger = logging.getLogger("CommPlexAPI")
 # ── App Configuration ─────────────────────────────────────────────────────────
 
 from server.routes.gcp_voice_sms import router as sms_router
+from server.routes.voice_stream import router as stream_router
 app = FastAPI(
     title="Arc Badlands CommPlex API",
     description="The Mouth — FastAPI gateway for telephony, webhooks, and lead management.",
@@ -71,6 +72,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 app.include_router(sms_router)
+app.include_router(stream_router)
 
 # ── Startup ───────────────────────────────────────────────────────────────────
 
