@@ -19,7 +19,6 @@ from twilio.twiml.voice_response import VoiceResponse, Connect
 from google.cloud import speech_v1 as speech
 from google.cloud import texttospeech_v1 as tts
 from google.cloud import firestore
-)
 
 router = APIRouter()
 
