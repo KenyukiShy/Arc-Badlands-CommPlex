@@ -210,7 +210,7 @@ def gemini_respond(user_msg: str, history: list, channel: str = "sms") -> str:
 
     try:
         response = _client.models.generate_content(
-            model="gemini-2.5-flash",
+            model="gemini-2.0-flash-lite" if channel in ("voice","sms") else "gemini-2.5-flash",
             contents=contents,
             config=GenerateContentConfig(
                 system_instruction=system,
@@ -476,7 +476,7 @@ async def debug_gemini():
     import traceback
     try:
         response = _client.models.generate_content(
-            model="gemini-2.5-flash",
+            model="gemini-2.0-flash-lite" if channel in ("voice","sms") else "gemini-2.5-flash",
             contents="Say hello from AutoBäad in one sentence.",
         )
         return {"status": "ok", "response": response.text}
@@ -491,7 +491,7 @@ async def health_gcp():
     """Verify GCP services are reachable."""
     status = {"gemini": False, "firestore": False, "tts": False}
     try:
-        _client.models.generate_content(model="gemini-2.5-flash", contents="ping")
+        _client.models.generate_content(model="gemini-2.0-flash-lite" if channel in ("voice","sms") else "gemini-2.5-flash", contents="ping")
         status["gemini"] = True
     except Exception as e:
         status["gemini_error"] = str(e)
