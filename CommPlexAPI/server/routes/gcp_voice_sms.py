@@ -49,24 +49,21 @@ router = APIRouter()
 PROJECT_ID = os.getenv("GCP_PROJECT_ID", "commplex-493805")
 REGION     = os.getenv("GCP_REGION", "us-central1")
 
-import functools
-
-@functools.lru_cache(maxsize=1)
-def _get_client():
-    return genai.Client(http_options=HttpOptions(api_version="v1"))
-
-@functools.lru_cache(maxsize=1)
-def _get_db():
-    return firestore.Client(project=PROJECT_ID)
-
-@functools.lru_cache(maxsize=1)
-def _get_tts():
-    return texttospeech.TextToSpeechClient()
-
-# Lazy accessors — called at request time, not import time
-def _client():   return _get_client()
-def _db():       return _get_db()
-def _tts():      return _get_tts()
+try:
+    _client = genai.Client(http_options=HttpOptions(api_version="v1"))
+except Exception as _e:
+    import sys; print(f"WARN: Gemini init: {_e}", file=sys.stderr)
+    _client = None
+try:
+    _db = firestore.Client(project=PROJECT_ID)
+except Exception as _e:
+    import sys; print(f"WARN: Firestore init: {_e}", file=sys.stderr)
+    _db = None
+try:
+    _tts = texttospeech.TextToSpeechClient()
+except Exception as _e:
+    import sys; print(f"WARN: TTS init: {_e}", file=sys.stderr)
+    _tts = None
 
 # ── AUDRY SYSTEM PROMPT ───────────────────────────────────────────────────────
 
@@ -151,24 +148,24 @@ RESPONSE STYLE:
 # ── FIRESTORE SESSION ─────────────────────────────────────────────────────────
 
 def get_session(phone: str) -> dict:
-    doc = _db().collection("sms_sessions").document(phone).get()
+    doc = _db.collection("sms_sessions").document(phone).get()
     if doc.exists:
         return doc.to_dict()
     return {"phone": phone, "history": [], "state": "new", "data": {}}
 
 def save_session(phone: str, session: dict):
     session["updated_at"] = datetime.now(timezone.utc).isoformat()
-    _db().collection("sms_sessions").document(phone).set(session)
+    _db.collection("sms_sessions").document(phone).set(session)
 
 def get_call_session(call_sid: str) -> dict:
-    doc = _db().collection("call_sessions").document(call_sid).get()
+    doc = _db.collection("call_sessions").document(call_sid).get()
     if doc.exists:
         return doc.to_dict()
     return {"call_sid": call_sid, "history": [], "turn": 0}
 
 def save_call_session(call_sid: str, session: dict):
     session["updated_at"] = datetime.now(timezone.utc).isoformat()
-    _db().collection("call_sessions").document(call_sid).set(session)
+    _db.collection("call_sessions").document(call_sid).set(session)
 
 # ── GEMINI RESPONSE ───────────────────────────────────────────────────────────
 
@@ -192,7 +189,7 @@ def gemini_respond(user_msg: str, history: list, channel: str = "sms") -> str:
     system = AUDRY_SYSTEM + channel_note
 
     try:
-        response = _client().models.generate_content(
+        response = _client.models.generate_content(
             model="gemini-2.5-flash",
             contents=contents,
             config=GenerateContentConfig(
@@ -222,7 +219,7 @@ def text_to_speech_url(text: str, call_sid: str) -> str:
     #     ssml_gender=texttospeech.SsmlVoiceGender.FEMALE
     # )
     # audio_config = texttospeech.AudioConfig(audio_encoding=texttospeech.AudioEncoding.MP3)
-    # response = _tts().synthesize_speech(input=synthesis_input, voice=voice, audio_config=audio_config)
+    # response = _tts.synthesize_speech(input=synthesis_input, voice=voice, audio_config=audio_config)
     # ... upload to GCS, return signed URL
     return None  # Falls back to Twilio <Say> until GCS is configured
 
@@ -452,7 +449,7 @@ async def debug_gemini():
     """Quick smoke test for Gemini connectivity."""
     import traceback
     try:
-        response = _client().models.generate_content(
+        response = _client.models.generate_content(
             model="gemini-2.5-flash",
             contents="Say hello from AutoBäad in one sentence.",
         )
@@ -468,17 +465,17 @@ async def health_gcp():
     """Verify GCP services are reachable."""
     status = {"gemini": False, "firestore": False, "tts": False}
     try:
-        _client().models.generate_content(model="gemini-2.5-flash", contents="ping")
+        _client.models.generate_content(model="gemini-2.5-flash", contents="ping")
         status["gemini"] = True
     except Exception as e:
         status["gemini_error"] = str(e)
     try:
-        _db().collection("health").document("ping").set({"ts": datetime.now().isoformat()})
+        _db.collection("health").document("ping").set({"ts": datetime.now().isoformat()})
         status["firestore"] = True
     except Exception as e:
         status["firestore_error"] = str(e)
     try:
-        _tts().list_voices(language_code="en-US")
+        _tts.list_voices(language_code="en-US")
         status["tts"] = True
     except Exception as e:
         status["tts_error"] = str(e)
