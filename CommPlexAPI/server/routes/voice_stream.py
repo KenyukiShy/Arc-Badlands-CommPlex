@@ -1,14 +1,6 @@
 """
 voice_stream.py — Twilio Media Streams + Google STT + Gemini + GCP TTS
-CommPlexAPI/server/routes/voice_stream.py
-
-Architecture:
-  OLD: Call → Twilio STT (<Gather>) → HTTP POST → Gemini → Polly TTS
-  NEW: Call → WebSocket → Google STT → Gemini flash-lite → GCP TTS → stream back
-
-Target latency: ~1.5-2s from caller stops speaking to Audry starts speaking.
 """
-
 import asyncio
 import base64
 import json
@@ -27,7 +19,7 @@ LOCATION = os.environ.get("GOOGLE_CLOUD_LOCATION", "us-central1")
 
 _stt_client = None
 _tts_client = None
-_db = None
+_db_client = None
 
 def _stt():
     global _stt_client
@@ -35,17 +27,17 @@ def _stt():
         _stt_client = speech.SpeechClient()
     return _stt_client
 
-def _tts():
+def _tts_c():
     global _tts_client
     if _tts_client is None:
         _tts_client = tts.TextToSpeechClient()
     return _tts_client
 
 def _firestore():
-    global _db
-    if _db is None:
-        _db = firestore.Client(project=PROJECT)
-    return _db
+    global _db_client
+    if _db_client is None:
+        _db_client = firestore.Client(project=PROJECT)
+    return _db_client
 
 STT_CONFIG = speech.RecognitionConfig(
     encoding=speech.RecognitionConfig.AudioEncoding.MULAW,
@@ -67,26 +59,19 @@ TTS_AUDIO = tts.AudioConfig(
     pitch=0.0,
 )
 
-AUDRY_SYSTEM = """You are Audry Harper, AI sales agent for AutoBäad — Kenyon Jones's private vehicle liquidation from Hazen, North Dakota. You are speaking on the phone. Use short, natural spoken sentences — never lists, never bullet points. One clear thought, then one question. Maximum 2 sentences per turn.
+AUDRY_SYSTEM = """You are Audry Harper, AI sales agent for AutoBaad, Kenyon Jones's private vehicle liquidation from Hazen, North Dakota. Use short natural spoken sentences, never lists. Max 2 sentences per turn.
 
 VEHICLES:
-1. 2006 F-350 King Ranch — 47k mi, 6.8L V10 gas (no DEF, no diesel), 4x4 selectable, factory 5th wheel kingpin hitch, clean GA title, Douglasville GA. $24k–$32k. Same lot as Jayco — one trip pickup.
-2. 2017 Jayco Eagle HT 26.5BHS — 2,400 tow miles, 4-season Climate Shield (0°F rated), half-ton towable, bunkhouse sleeps 8–10, clean GA title. $24k–$32k. Disclosed: tire age, underbelly coroplast patch, Lippert jacks disengaged (manual works), one cabinet hinge. All priced in.
-3. 2016 Lincoln MKZ Hybrid — ~100k miles, BILL OF SALE ONLY (no title — retained by shipper, seller uncooperative), HV hybrid traction battery needs deep cycle recharge (NOT a simple 12V swap), Lucky's Towing, Beulah ND. $4k–$12k. Always disclose title situation first.
-4. 1988 Lincoln Town Car Signature — 31,511 actual miles, 5.0L Windsor V8, Oxford White/Navy Windsor Velour interior, NO AIRBAGS (1988 predates them), clean ND title, Hazen ND. $8k–$16k. BaT/Mecum reserve $8k. Disclosed: driver door panel/trim disintegrated, passenger corner upholstery peeled, driver window module needs replacement, cigarette lighter fuse blown, high idle from 1990s engine cleaner (not a defect), air ride bags applied/springs solid/chains need stowing.
+1. 2006 F-350 King Ranch, 47k mi, 6.8L V10, 4x4, factory 5th wheel hitch, clean GA title. $24k-$32k.
+2. 2017 Jayco Eagle HT 26.5BHS, 2400 tow miles, 4-season, bunkhouse, clean GA title. $24k-$32k.
+3. 2016 Lincoln MKZ Hybrid, ~100k miles, BILL OF SALE ONLY (no title), HV hybrid traction battery needs deep cycle recharge. $4k-$12k. Always disclose title situation first.
+4. 1988 Lincoln Town Car Signature, 31511 actual miles, 5.0L V8, Oxford White, NO AIRBAGS, clean ND title. $8k-$16k.
 
-RULES:
-- Greet warmly, identify yourself as Aw-dree from Auto-Bad
-- Disclose all issues before buyer asks
-- Capture their callback number before giving Kenyon's
-- Offer floor gatekeeper: below floor → "We're a bit apart — can you come closer to $X?"
-- Cross-sell: F-350 ↔ Jayco (same GA lot). Town Car ↔ MKZ (2-car carrier from western ND)
-- Close: "Kenyon reviews offers each evening — what's the best number to reach you?"
-"""
+RULES: Greet warmly as Aw-dree from Auto-Bad. Disclose all issues. Capture callback number. Cross-sell: F-350 and Jayco on same GA lot. Close by asking for best callback number."""
 
 GREETING = (
     "Thank you for calling Auto-Bad. This is Aw-dree, the A I sales agent for Kenyon Jones. "
-    "We have four vehicles available — an eighty-eight Town Car, a twenty-sixteen M K Z Hybrid, "
+    "We have four vehicles available: an eighty-eight Town Car, a twenty-sixteen M K Z Hybrid, "
     "a twenty-oh-six F Three-Fifty King Ranch, and a twenty-seventeen Jayco Eagle. "
     "Which one can I tell you about?"
 )
@@ -95,8 +80,8 @@ SILENCE_SECONDS = 0.65
 MAX_AUDIO_SECONDS = 30
 
 
-def synthesize(text: str) -> bytes:
-    resp = _tts().synthesize_speech(
+def synthesize(text):
+    resp = _tts_c().synthesize_speech(
         input=tts.SynthesisInput(text=text),
         voice=TTS_VOICE,
         audio_config=TTS_AUDIO,
@@ -104,7 +89,7 @@ def synthesize(text: str) -> bytes:
     return resp.audio_content
 
 
-def transcribe_batch(audio_bytes: bytes) -> str:
+def transcribe_batch(audio_bytes):
     if len(audio_bytes) < 800:
         return ""
 
@@ -119,7 +104,7 @@ def transcribe_batch(audio_bytes: bytes) -> str:
         chunk_size = 4096
         for i in range(0, len(audio_bytes), chunk_size):
             yield speech.StreamingRecognizeRequest(
-                audio_content=audio_bytes[i : i + chunk_size]
+                audio_content=audio_bytes[i:i + chunk_size]
             )
 
     best = ""
@@ -135,8 +120,11 @@ def transcribe_batch(audio_bytes: bytes) -> str:
     return best
 
 
-def gemini_voice_reply(transcript: str, history: list) -> str:
+def gemini_voice_reply(transcript, history):
+    import vertexai
+    from vertexai.generative_models import GenerativeModel, GenerationConfig, Content, Part
     vertexai.init(project=PROJECT, location=LOCATION)
+    model = GenerativeModel(
         "gemini-2.0-flash-lite",
         system_instruction=AUDRY_SYSTEM,
     )
@@ -147,10 +135,10 @@ def gemini_voice_reply(transcript: str, history: list) -> str:
             parts=[Part.from_text(turn["parts"][0])]
         ))
     contents.append(Content(role="user", parts=[Part.from_text(transcript)]))
-
     try:
         resp = model.generate_content(
             contents,
+            generation_config=GenerationConfig(
                 max_output_tokens=120,
                 temperature=0.35,
             ),
@@ -158,10 +146,10 @@ def gemini_voice_reply(transcript: str, history: list) -> str:
         return resp.text.strip()
     except Exception as e:
         print(f"[Gemini error] {e}")
-        return "I didn't catch that — which vehicle were you asking about?"
+        return "I didn't catch that, which vehicle were you asking about?"
 
 
-def log_voice_lead(call_sid: str, caller: str, transcript: str, reply: str):
+def log_voice_lead(call_sid, caller, transcript, reply):
     try:
         from datetime import datetime, timezone
         _firestore().collection("leads").add({
@@ -190,16 +178,16 @@ async def voice_stream_twiml(request: Request):
 async def voice_stream_ws(websocket: WebSocket):
     await websocket.accept()
 
-    stream_sid: str = ""
-    call_sid: str = ""
-    caller: str = ""
-    history: list = []
+    stream_sid = ""
+    call_sid = ""
+    caller = ""
+    history = []
     audio_buf = bytearray()
     silence_task = None
     loop = asyncio.get_event_loop()
     processing = False
 
-    async def send_audio(pcm: bytes):
+    async def send_audio(pcm):
         if not pcm:
             return
         payload = base64.b64encode(pcm).decode()
@@ -209,7 +197,7 @@ async def voice_stream_ws(websocket: WebSocket):
             "media": {"payload": payload},
         }))
 
-    async def play_text(text: str):
+    async def play_text(text):
         if not text:
             return
         audio = await loop.run_in_executor(None, synthesize, text)
@@ -222,26 +210,21 @@ async def voice_stream_ws(websocket: WebSocket):
         processing = True
         buf_snapshot = bytes(audio_buf)
         audio_buf = bytearray()
-
         try:
             transcript = await loop.run_in_executor(None, transcribe_batch, buf_snapshot)
             if not transcript:
-                await play_text("I didn't quite catch that — could you say that again?")
+                await play_text("I didn't quite catch that, could you say that again?")
                 return
-
             print(f"[STT] {transcript}")
             reply = await loop.run_in_executor(None, gemini_voice_reply, transcript, history)
             print(f"[Gemini] {reply}")
-
-            history.append({"role": "user",  "parts": [transcript]})
+            history.append({"role": "user", "parts": [transcript]})
             history.append({"role": "model", "parts": [reply]})
-
             await play_text(reply)
             loop.run_in_executor(None, log_voice_lead, call_sid, caller, transcript, reply)
-
         except Exception as e:
             print(f"[process_utterance error] {e}")
-            await play_text("I had a small hiccup — which vehicle were you asking about?")
+            await play_text("I had a small hiccup, which vehicle were you asking about?")
         finally:
             processing = False
 
@@ -253,18 +236,15 @@ async def voice_stream_ws(websocket: WebSocket):
         async for raw_msg in websocket.iter_text():
             msg = json.loads(raw_msg)
             event = msg.get("event")
-
             if event == "connected":
-                print("[stream] WebSocket connected")
-
+                print("[stream] connected")
             elif event == "start":
                 info = msg.get("start", {})
                 stream_sid = info.get("streamSid", "")
-                call_sid   = info.get("callSid", "")
-                caller     = info.get("customParameters", {}).get("caller", "unknown")
-                print(f"[stream] start — call={call_sid}")
+                call_sid = info.get("callSid", "")
+                caller = info.get("customParameters", {}).get("caller", "unknown")
+                print(f"[stream] start call={call_sid}")
                 await play_text(GREETING)
-
             elif event == "media":
                 chunk = base64.b64decode(msg["media"]["payload"])
                 audio_buf.extend(chunk)
@@ -275,18 +255,16 @@ async def voice_stream_ws(websocket: WebSocket):
                     if silence_task and not silence_task.done():
                         silence_task.cancel()
                     await process_utterance()
-
             elif event == "stop":
                 if silence_task and not silence_task.done():
                     silence_task.cancel()
                 await process_utterance()
                 break
-
     except WebSocketDisconnect:
-        print(f"[stream] disconnected — call={call_sid}")
+        print(f"[stream] disconnected call={call_sid}")
     except Exception as e:
         print(f"[stream] error: {e}")
     finally:
         if silence_task and not silence_task.done():
             silence_task.cancel()
-        print(f"[stream] session ended — call={call_sid}")
+        print(f"[stream] ended call={call_sid}")
