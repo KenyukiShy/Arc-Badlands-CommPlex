@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cp /mnt/chromeos/MyFiles/Downloads/qa_dispatch.py /home/kenyuki/arc-badlands-commplex/ops/qa_dispatch.py)",
+      "Bash(cp /mnt/chromeos/MyFiles/Downloads/commplex_qa_dispatch_v2.py /home/kenyuki/arc-badlands-commplex/ops/hooks/commplex.py)",
+      "Bash(cp /mnt/chromeos/MyFiles/Downloads/big_scraper_qa_hook.py /home/kenyuki/arc-badlands-commplex/ops/hooks/dipper.py)",
+      "Bash(cp /mnt/chromeos/MyFiles/Downloads/commplex_test_cheatsheet_v2.py /home/kenyuki/arc-badlands-commplex/ops/cheatsheets/commplex_v2.py)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git push *)"
+    ]
+  }
+}

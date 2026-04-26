@@ -1,7 +1,0 @@
-fastapi
-uvicorn[standard]
-httpx
-google-cloud-firestore
-google-cloud-aiplatform>=1.38.0
-twilio>=8.0.0
-requests
