@@ -7,6 +7,7 @@ uvicorn[standard]>=0.29.0
 python-dotenv>=1.0.0
 pydantic>=2.0.0
 httpx>=0.27.0              # FastAPI test client + async HTTP
+python-multipart>=0.0.9    # FastAPI form parsing (Twilio webhooks)
 
 # ── Database ─────────────────────────────────────────────────────────────────
 sqlalchemy>=2.0.0
@@ -29,7 +30,10 @@ google-cloud-aiplatform>=1.47.0       # Vertex AI / Gemini Flash
 google-cloud-bigquery>=3.17.0         # Campaign analytics
 google-cloud-storage>=2.16.0          # GCS for PDFs + screenshots
 google-cloud-secret-manager>=2.20.0   # Secret Manager
-google-cloud-firestore>=2.16.0        # Hardware registry
+google-cloud-firestore>=2.16.0        # Firestore sessions + leads
+google-cloud-texttospeech>=2.16.0     # GCP TTS (Audry voice)
+google-cloud-speech                   # GCP STT (voice_stream)
+google-genai>=1.0.0                   # Gemini Flash via Vertex
 
 # ── Telephony ────────────────────────────────────────────────────────────────
 twilio>=8.13.0
