@@ -121,27 +121,20 @@ def transcribe_batch(audio_bytes):
 
 
 def gemini_voice_reply(transcript, history):
-    import vertexai
-    from vertexai.generative_models import GenerativeModel, GenerationConfig, Content, Part
-    vertexai.init(project=PROJECT, location=LOCATION)
-    model = GenerativeModel(
+    import google.generativeai as genai
+    genai.configure(api_key=os.environ.get("GEMINI_API_KEY", "AIzaSyA9N0a3MiT9xJ4Pu0Mx7flOMcTDBfJLGWA"))
+    model = genai.GenerativeModel(
         "gemini-1.5-flash",
         system_instruction=AUDRY_SYSTEM,
     )
-    contents = []
+    chat_history = []
     for turn in history[-8:]:
-        contents.append(Content(
-            role=turn["role"],
-            parts=[Part.from_text(turn["parts"][0])]
-        ))
-    contents.append(Content(role="user", parts=[Part.from_text(transcript)]))
+        chat_history.append({"role": turn["role"], "parts": [turn["parts"][0]]})
     try:
-        resp = model.generate_content(
-            contents,
-            generation_config=GenerationConfig(
-                max_output_tokens=120,
-                temperature=0.35,
-            ),
+        chat = model.start_chat(history=chat_history)
+        resp = chat.send_message(
+            transcript,
+            generation_config={"max_output_tokens": 120, "temperature": 0.35}
         )
         return resp.text.strip()
     except Exception as e:
