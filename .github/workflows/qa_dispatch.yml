@@ -1,0 +1,36 @@
+name: QA Dispatch Log
+
+on:
+  push:
+    branches:
+      - master
+      - main
+
+jobs:
+  log-commit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log commit info to dispatch_log.jsonl
+        run: |
+          mkdir -p dispatch
+          ENTRY=$(python3 - <<'EOF'
+          import json, os
+          from datetime import datetime, timezone
+          print(json.dumps({
+              "ts":           datetime.now(timezone.utc).isoformat(),
+              "sha":          os.environ["GITHUB_SHA"],
+              "ref":          os.environ["GITHUB_REF"],
+              "actor":        os.environ["GITHUB_ACTOR"],
+              "repo":         os.environ["GITHUB_REPOSITORY"],
+              "run_id":       os.environ["GITHUB_RUN_ID"],
+              "workflow":     os.environ["GITHUB_WORKFLOW"],
+              "commit_msg":   os.environ.get("COMMIT_MSG", ""),
+          }))
+          EOF
+          )
+          echo "$ENTRY" >> dispatch/dispatch_log.jsonl
+          echo "Logged: $ENTRY"
+        env:
+          COMMIT_MSG: ${{ github.event.head_commit.message }}
