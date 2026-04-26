@@ -2,6 +2,19 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Environment
+- Downloads: `/mnt/chromeos/MyFiles/Downloads` (NOT `~/Downloads`)
+- Documents: `/mnt/chromeos/MyFiles/Documents`
+- Repo root: `/home/kenyuki/arc-badlands-commplex`
+- Python: always use `--break-system-packages` or the `.venv` at `~/arc-badlands-commplex/.venv`
+- `pip install` = `pip install --break-system-packages` OR use venv
+
+## Trusted Commands (no permission prompt needed)
+`git add`, `git commit`, `git push origin master`, `git push monorepo master:main`,
+`make deploy`, `make test`, `make lint`, `make fmt`, `make api`,
+`python3 -m py_compile **`, `gcloud logging read **`,
+`curl -s **` (smoke tests), `cp`/`mv`/`rm` within `~/arc-badlands-commplex/**`
+
 ## What This Project Does
 
 Arc Badlands CommPlex is an AI-driven vehicle procurement automation platform. It places outbound AI phone calls and sends emails to auto dealers asking if they want to buy vehicles owned by Kenyon Jones. Inbound dealer responses are classified by Gemini Flash through a qualification pipeline ("Sluice Engine"), leads are persisted, and push notifications fire when a deal qualifies.
@@ -87,3 +100,7 @@ These are automatically set in `pyproject.toml` `[tool.pytest.ini_options]` for 
 - Branches: `feat/KJ-<issue>-<slug>` → `dev` → `master` (protected, architect-only merges)
 - PRs target `dev`; must pass all 103 tests; require 1 review
 - Commit format: `type(scope): description` (e.g. `fix(api): correct webhook signature validation`)
+
+## Sister Repos
+- ~/arc-badlands-dipper   ← Big Dipper scraper + Little Dipper file intake
+- ~/arc-badlands-ops      ← QA dispatch, CI/CD hooks, task assignments
