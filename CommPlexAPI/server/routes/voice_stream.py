@@ -124,7 +124,7 @@ def gemini_voice_reply(transcript, history):
     import google.generativeai as genai
     genai.configure(api_key=os.environ.get("GEMINI_API_KEY", "AIzaSyA9N0a3MiT9xJ4Pu0Mx7flOMcTDBfJLGWA"))
     model = genai.GenerativeModel(
-        "gemini-2.0-flash",
+        "gemini-2.0-flash-001",
         system_instruction=AUDRY_SYSTEM,
     )
     chat_history = []
