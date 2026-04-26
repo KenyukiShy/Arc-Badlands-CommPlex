@@ -325,7 +325,7 @@ def save_call_session(call_sid: str, session: dict):
 
 # ── GEMINI RESPONSE ───────────────────────────────────────────────────────────
 
-def gemini_respond(user_msg: str, history: list, channel: str = "sms") -> str:
+def gemini_respond(user_msg: str, history: list, channel: str = "sms", caller_context: str = "") -> str:
     """
     Generate Audry's response using Gemini Flash.
     history: list of {"role": "user"|"model", "parts": [str]}
@@ -344,7 +344,7 @@ def gemini_respond(user_msg: str, history: list, channel: str = "sms") -> str:
     elif channel == "web":
         channel_note = "\n\nIMPORTANT: This is a web chat. Give complete, helpful responses of 3-5 sentences. Include all relevant vehicle details. Do not truncate."
 
-    system = AUDRY_SYSTEM + channel_note
+    system = AUDRY_SYSTEM + channel_note + caller_context
 
     try:
         response = _client.models.generate_content(
