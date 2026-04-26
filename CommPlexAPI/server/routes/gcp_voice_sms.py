@@ -50,7 +50,10 @@ PROJECT_ID = os.getenv("GCP_PROJECT_ID", "commplex-493805")
 REGION     = os.getenv("GCP_REGION", "us-central1")
 
 try:
-    _client = genai.Client(http_options=HttpOptions(api_version="v1"))
+    if os.getenv("GOOGLE_GENAI_USE_VERTEXAI", "").lower() == "true":
+        _client = genai.Client(project=PROJECT_ID, location=REGION)
+    else:
+        _client = genai.Client(http_options=HttpOptions(api_version="v1"))
 except Exception as _e:
     import sys; print(f"WARN: Gemini init: {_e}", file=sys.stderr)
     _client = None

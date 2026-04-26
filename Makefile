@@ -65,12 +65,12 @@ notifier-qualified:
 deploy:
 	@echo "Deploying CommPlexAPI to Cloud Run..."
 	gcloud run deploy commplex-api \
-	  --source CommPlexAPI/ \
+	  --source . \
 	  --project=$(GCP_PROJECT) \
 	  --region=$(REGION) \
 	  --platform=managed \
 	  --allow-unauthenticated \
-	  --set-env-vars="DRY_RUN=true,VERTEX_STATUS=STUB,NTFY_TOPIC=px10pro-commplex-z7x2-alert-hub" \
+	  --set-env-vars="DRY_RUN=true,VERTEX_STATUS=STUB,NTFY_TOPIC=px10pro-commplex-z7x2-alert-hub,GOOGLE_GENAI_USE_VERTEXAI=True" \
 	  --memory=512Mi
 	@echo "After deploy: copy the service URL and set TWILIO_WEBHOOK_BASE_URL in .env"
 
