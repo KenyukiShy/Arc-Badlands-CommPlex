@@ -280,6 +280,7 @@ def update_lead_status(lead_id: int, update: LeadStatusUpdate, db: Session = Dep
 def list_campaigns():
     """List available campaigns (delegating to CommPlexCore)."""
     try:
+        sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
         from CommPlexCore.campaigns.registry import CampaignRegistry
         campaigns = CampaignRegistry.summaries()
     except ImportError:
