@@ -12,8 +12,9 @@ Filters applied before any send:
     - vehicle_interest must contain the campaign slug keyword
 
 Message selection:
-    - State in ND/SD/MT/MN → ND_COLD (cold-climate pitch)
-    - All other states      → DEFAULT
+    - State in ND/SD/MT/MN → ND_COLD_SMS (cold-climate pitch, 1 segment)
+    - All other states      → DEFAULT_SMS
+    Falls back to ND_COLD / DEFAULT (email-length) if SMS variant absent.
 """
 
 from __future__ import annotations
@@ -34,14 +35,12 @@ _REPO     = _HERE.parent.parent
 if str(_REPO) not in sys.path:
     sys.path.insert(0, str(_REPO))
 
-DRY_RUN = os.getenv("DRY_RUN", "true").lower() != "false"
+DRY_RUN = os.getenv("DRY_RUN", "true").lower() == "true"
 
 FROM_NUMBER = os.getenv("TWILIO_FROM_NUMBER", "+18667362349")
 
-# States that get the cold-climate / ND-market pitch
 _COLD_STATES = {"ND", "SD", "MT", "MN", "WI", "WY", "ID"}
 
-# Keywords used to match vehicle_interest column to a campaign
 _CAMPAIGN_KEYWORDS = {
     "jayco":   ["jayco"],
     "mkz":     ["mkz", "hybrid"],
@@ -49,7 +48,6 @@ _CAMPAIGN_KEYWORDS = {
     "f350":    ["f-350", "f350", "king ranch"],
 }
 
-# Notes substrings that flag a contact for human-only outreach
 _SKIP_PHRASES = [
     "live call",
     "not slydialer",
@@ -57,21 +55,26 @@ _SKIP_PHRASES = [
     "cynthia and sherrie handle direct",
 ]
 
+# T1 first, then T2/T3, then floor-setters, then last-resort fallbacks
+_TIER_RANK = {"T1": 0, "T2": 1, "T3": 2, "FLOOR": 3, "FALLBACK": 4}
+
+_COMPANY_COL_WIDTH = 34
+
 
 # ── Data model ────────────────────────────────────────────────────────────────
 
 @dataclass
 class DealerRow:
-    idx:          int
-    phone:        str
-    name:         str
-    company:      str
-    city:         str
-    state:        str
-    interest:     str
-    tier:         str
-    notes:        str
-    priority:     int
+    idx:      int
+    phone:    str
+    name:     str
+    company:  str
+    city:     str
+    state:    str
+    interest: str
+    tier:     str
+    notes:    str
+    priority: int
 
 
 @dataclass
@@ -111,8 +114,7 @@ def load_dealers(csv_path: Path = _CSV_PATH) -> List[DealerRow]:
 # ── Filter ────────────────────────────────────────────────────────────────────
 
 def _matches_campaign(interest: str, slug: str) -> bool:
-    kws = _CAMPAIGN_KEYWORDS.get(slug, [slug])
-    return any(kw in interest.lower() for kw in kws)
+    return any(kw in interest.lower() for kw in _CAMPAIGN_KEYWORDS.get(slug, [slug]))
 
 
 def _skip_reason(dealer: DealerRow, slug: str) -> str | None:
@@ -127,14 +129,23 @@ def _skip_reason(dealer: DealerRow, slug: str) -> str | None:
     return None
 
 
+def _resolve_msg_key(state: str, msgs: dict) -> str:
+    base = "ND_COLD" if state in _COLD_STATES else "DEFAULT"
+    for candidate in (base + "_SMS", base):
+        if candidate in msgs:
+            return candidate
+    return next(iter(msgs))
+
+
 def filter_dealers(
     dealers: List[DealerRow], slug: str
-) -> Tuple[List[QueueEntry], List[SkipEntry]]:
+) -> Tuple[List[QueueEntry], List[SkipEntry], object]:
     from CommPlexCore.campaigns.registry import CampaignRegistry
     campaign = CampaignRegistry.get(slug)
     if campaign is None:
         raise ValueError(f"Unknown campaign slug: {slug!r}")
 
+    msgs = campaign.messages  # cache: @property rebuilds dict on every access
     queue: List[QueueEntry] = []
     skipped: List[SkipEntry] = []
 
@@ -143,70 +154,56 @@ def filter_dealers(
         if reason:
             skipped.append(SkipEntry(dealer=d, reason=reason))
             continue
-        base_key = "ND_COLD" if d.state in _COLD_STATES else "DEFAULT"
-        # Prefer short SMS variant when the campaign defines one
-        msg_key = base_key + "_SMS" if (base_key + "_SMS") in campaign.messages else base_key
-        # Gracefully fall back if campaign doesn't have the expected key
-        if msg_key not in campaign.messages:
-            msg_key = next(iter(campaign.messages))
-        queue.append(QueueEntry(
-            dealer=d,
-            msg_key=msg_key,
-            message=campaign.messages[msg_key],
-        ))
+        msg_key = _resolve_msg_key(d.state, msgs)
+        queue.append(QueueEntry(dealer=d, msg_key=msg_key, message=msgs[msg_key]))
 
-    # Sort: priority asc, then tier rank (T1 < T2 < T3 < FLOOR < FALLBACK)
-    tier_rank = {"T1": 0, "T2": 1, "T3": 2, "FLOOR": 3, "FALLBACK": 4}
-    queue.sort(key=lambda e: (e.dealer.priority, tier_rank.get(e.dealer.tier, 9)))
-    return queue, skipped
+    queue.sort(key=lambda e: (e.dealer.priority, _TIER_RANK.get(e.dealer.tier, 9)))
+    return queue, skipped, campaign
 
 
 # ── Preview ───────────────────────────────────────────────────────────────────
 
 def _sms_segments(text: str, limit: int = 153) -> int:
-    """Estimate Twilio concatenated SMS segments (153 chars per segment in multi-part)."""
-    return 1 if len(text) <= 160 else -(-len(text) // limit)  # ceiling div
+    """Ceiling div — 153 chars/segment for Twilio concatenated multi-part SMS."""
+    return 1 if len(text) <= 160 else -(-len(text) // limit)
 
 
-def preview_wave(queue: List[QueueEntry], skipped: List[SkipEntry], slug: str) -> None:
-    w_co = 34
+def _print_table_header(cols: str, width: int) -> None:
+    print(cols)
+    print("  " + "-" * width)
+
+
+def preview_wave(queue: List[QueueEntry], skipped: List[SkipEntry], slug: str, campaign) -> None:
+    W = _COMPANY_COL_WIDTH
     print()
     print("=" * 70)
-    print(f"  JAYCO WAVE — DRY-RUN PREVIEW   (DRY_RUN={DRY_RUN})")
+    print(f"  {slug.upper()} WAVE — DRY-RUN PREVIEW   (DRY_RUN={DRY_RUN})")
     print(f"  Campaign: {slug.upper()}   From: {FROM_NUMBER}")
     print("=" * 70)
 
-    # ── Queue ──────────────────────────────────────────────────────────────────
     print(f"\n  SEND QUEUE — {len(queue)} contact(s)\n")
-    hdr = f"  {'#':>2}  {'Tier':<8} {'Company':<{w_co}} {'St':2}  {'Phone':14}  {'Msg':<8}  {'Ch':>4}  {'Seg':>3}"
-    print(hdr)
-    print("  " + "-" * (len(hdr) - 2))
+    queue_hdr = f"  {'#':>2}  {'Tier':<8} {'Company':<{W}} {'St':2}  {'Phone':14}  {'Msg':<12}  {'Ch':>4}  {'Seg':>3}"
+    _print_table_header(queue_hdr, len(queue_hdr) - 2)
     for e in queue:
         d = e.dealer
         segs = _sms_segments(e.message)
-        co = d.company[:w_co].ljust(w_co)
-        print(f"  {d.idx:>2}  {d.tier:<8} {co} {d.state:2}  {d.phone:14}  {e.msg_key:<8}  {len(e.message):>4}  {segs:>3}")
+        co = d.company[:W].ljust(W)
+        print(f"  {d.idx:>2}  {d.tier:<8} {co} {d.state:2}  {d.phone:14}  {e.msg_key:<12}  {len(e.message):>4}  {segs:>3}")
         if d.notes:
-            note = textwrap.shorten(d.notes, width=64, placeholder="…")
-            print(f"  {'':2}  {'':8} {note}")
+            print(f"       {textwrap.shorten(d.notes, width=64, placeholder='…')}")
 
-    # ── Skipped ────────────────────────────────────────────────────────────────
     print(f"\n  SKIPPED — {len(skipped)} contact(s)\n")
-    hdr2 = f"  {'#':>2}  {'Tier':<8} {'Company':<{w_co}} {'Reason'}"
-    print(hdr2)
-    print("  " + "-" * (len(hdr2) - 2))
+    skip_hdr = f"  {'#':>2}  {'Tier':<8} {'Company':<{W}} {'Reason'}"
+    _print_table_header(skip_hdr, len(skip_hdr) - 2)
     for e in skipped:
         d = e.dealer
-        co = d.company[:w_co].ljust(w_co)
-        print(f"  {d.idx:>2}  {d.tier:<8} {co} {e.reason}")
+        print(f"  {d.idx:>2}  {d.tier:<8} {d.company[:W].ljust(W)} {e.reason}")
 
-    # ── Message previews ───────────────────────────────────────────────────────
-    used_keys = sorted({e.msg_key for e in queue})
-    from CommPlexCore.campaigns.registry import CampaignRegistry
-    campaign = CampaignRegistry.get(slug)
+    msgs = campaign.messages
+    used_keys = list(dict.fromkeys(e.msg_key for e in queue))  # insertion order
     print(f"\n  MESSAGE TEMPLATES ({len(used_keys)} variant(s) in this wave)\n")
     for key in used_keys:
-        msg = campaign.messages[key]
+        msg = msgs[key]
         segs = _sms_segments(msg)
         print(f"  ── {key}  ({len(msg)} chars / {segs} SMS segment(s)) " + "─" * 20)
         for line in msg.splitlines():
@@ -249,8 +246,8 @@ def send_wave(queue: List[QueueEntry], dry_run: bool = True) -> List[dict]:
 def main():
     slug = sys.argv[1] if len(sys.argv) > 1 else "jayco"
     dealers = load_dealers()
-    queue, skipped = filter_dealers(dealers, slug)
-    preview_wave(queue, skipped, slug)
+    queue, skipped, campaign = filter_dealers(dealers, slug)
+    preview_wave(queue, skipped, slug, campaign)
     if not DRY_RUN:
         confirm = input(f"Send {len(queue)} SMS messages? [yes/N] ").strip().lower()
         if confirm == "yes":
