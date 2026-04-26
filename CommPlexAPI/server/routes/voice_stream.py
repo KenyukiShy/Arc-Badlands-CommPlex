@@ -125,7 +125,7 @@ def gemini_voice_reply(transcript, history):
     from vertexai.generative_models import GenerativeModel, GenerationConfig, Content, Part
     vertexai.init(project=PROJECT, location=LOCATION)
     model = GenerativeModel(
-        "gemini-2.0-flash-lite",
+        "gemini-1.5-flash",
         system_instruction=AUDRY_SYSTEM,
     )
     contents = []
