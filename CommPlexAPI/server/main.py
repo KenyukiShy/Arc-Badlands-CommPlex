@@ -280,10 +280,9 @@ def update_lead_status(lead_id: int, update: LeadStatusUpdate, db: Session = Dep
 def list_campaigns():
     """List available campaigns (delegating to CommPlexCore)."""
     try:
-        from CommPlexCore.campaigns.mkz import MKZCampaign
-        campaigns = [MKZCampaign().summary()]
+        from CommPlexCore.campaigns.registry import CampaignRegistry
+        campaigns = CampaignRegistry.summaries()
     except ImportError:
-        # Fallback if CommPlexCore not on path
         campaigns = [{"slug": "mkz", "campaign_id": "MKZ_2016_HYBRID", "status": "CommPlexCore not linked"}]
     return {"campaigns": campaigns}
 

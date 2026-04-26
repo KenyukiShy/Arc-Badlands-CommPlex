@@ -59,15 +59,7 @@ TTS_AUDIO = tts.AudioConfig(
     pitch=0.0,
 )
 
-AUDRY_SYSTEM = """You are Audry Harper, AI sales agent for AutoBaad, Kenyon Jones's private vehicle liquidation from Hazen, North Dakota. Use short natural spoken sentences, never lists. Max 2 sentences per turn.
-
-VEHICLES:
-1. 2006 F-350 King Ranch, 47k mi, 6.8L V10, 4x4, factory 5th wheel hitch, clean GA title. $24k-$32k.
-2. 2017 Jayco Eagle HT 26.5BHS, 2400 tow miles, 4-season, bunkhouse, clean GA title. $24k-$32k.
-3. 2016 Lincoln MKZ Hybrid, ~100k miles, BILL OF SALE ONLY (no title), HV hybrid traction battery needs deep cycle recharge. $4k-$12k. Always disclose title situation first.
-4. 1988 Lincoln Town Car Signature, 31511 actual miles, 5.0L V8, Oxford White, NO AIRBAGS, clean ND title. $8k-$16k.
-
-RULES: Greet warmly as Aw-dree from Auto-Bad. Disclose all issues. Capture callback number. Cross-sell: F-350 and Jayco on same GA lot. Close by asking for best callback number."""
+from .gcp_voice_sms import AUDRY_SYSTEM
 
 GREETING = (
     "Thank you for calling Auto-Bad. This is Aw-dree, the A I sales agent for Kenyon Jones. "
@@ -122,7 +114,7 @@ def transcribe_batch(audio_bytes):
 
 def gemini_voice_reply(transcript, history):
     import google.generativeai as genai
-    genai.configure(api_key=os.environ.get("GEMINI_API_KEY", "AIzaSyA9N0a3MiT9xJ4Pu0Mx7flOMcTDBfJLGWA"))
+    genai.configure(api_key=os.environ.get("GEMINI_API_KEY", ""))
     model = genai.GenerativeModel(
         "gemini-2.5-flash",
         system_instruction=AUDRY_SYSTEM,
