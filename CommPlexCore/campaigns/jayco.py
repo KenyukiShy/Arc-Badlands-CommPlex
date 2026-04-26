@@ -91,6 +91,18 @@ NOTE: BaT does not accept 5th wheel RVs. Corral Sales Mandan ND is the primary c
 Kenyon Jones | (701) 870-5235 | kjonesmle@gmail.com
 Cynthia Ennis (authorized) | (701) 946-5731"""
 
+# ── SMS Variants (~160 chars, 1 segment) ──────────────────────────────────────
+
+_ND_COLD_SMS = (
+    "Kenyon Jones — 2017 Jayco Eagle HT 26.5BHS, 4-Season/Climate Shield, "
+    "~2,400 tow miles, clean GA title. $27K–$35K, consignment OK. (701) 870-5235"
+)
+
+_DEFAULT_SMS = (
+    "Kenyon Jones — 2017 Jayco Eagle HT 26.5BHS fifth wheel, ~2,400 tow miles, "
+    "clean GA title. $27K–$35K, consignment welcome. (701) 870-5235"
+)
+
 
 # ── Jayco Campaign ────────────────────────────────────────────────────────────
 
@@ -132,8 +144,10 @@ class JaycoCampaign(BaseCampaign):
     @property
     def messages(self) -> Dict[str, str]:
         return {
-            "ND_COLD": _ND_COLD,
-            "DEFAULT": _DEFAULT,
+            "ND_COLD":     _ND_COLD,
+            "DEFAULT":     _DEFAULT,
+            "ND_COLD_SMS": _ND_COLD_SMS,
+            "DEFAULT_SMS": _DEFAULT_SMS,
         }
 
     @property

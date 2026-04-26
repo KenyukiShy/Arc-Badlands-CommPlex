@@ -7,7 +7,13 @@
       "Bash(cp /mnt/chromeos/MyFiles/Downloads/commplex_test_cheatsheet_v2.py /home/kenyuki/arc-badlands-commplex/ops/cheatsheets/commplex_v2.py)",
       "Bash(git add *)",
       "Bash(git commit *)",
-      "Bash(git push *)"
+      "Bash(git push *)",
+      "Bash(git *)",
+      "Bash(python3 *)",
+      "Bash(PYTHONPATH=$\\(pwd\\) DRY_RUN=true python3 CommPlexAPI/server/batch_dispatch.py jayco)",
+      "Bash(gcloud run *)",
+      "Bash(pip show *)",
+      "Bash(pip3 show *)"
     ]
   }
 }
