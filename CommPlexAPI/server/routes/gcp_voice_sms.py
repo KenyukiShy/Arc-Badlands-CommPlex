@@ -66,6 +66,92 @@ except Exception as _e:
     _tts = None
 
 
+
+def lookup_caller(phone: str) -> dict:
+    """
+    Look up a caller by phone number across dealers, contacts, and leads.
+    Returns enriched context dict injected into Audry's system prompt.
+    """
+    try:
+        digits = re.sub(r"[^\d]", "", phone)
+        db = _firestore()
+
+        # Check dealers collection
+        for doc in db.collection("dealers").stream():
+            d = doc.to_dict()
+            if re.sub(r"[^\d]", "", d.get("phone","")) == digits:
+                return {
+                    "known": True,
+                    "type": "dealer",
+                    "company": d.get("company",""),
+                    "contact_name": d.get("contact_name",""),
+                    "vehicle_interest": d.get("vehicle_interest",""),
+                    "tier": d.get("tier",""),
+                    "notes": d.get("notes",""),
+                    "priority": d.get("priority", 99),
+                }
+
+        # Check contacts collection
+        for doc in db.collection("contacts").stream():
+            d = doc.to_dict()
+            if re.sub(r"[^\d]", "", d.get("phone","")) == digits:
+                return {
+                    "known": True,
+                    "type": d.get("source","contact"),
+                    "company": d.get("company",""),
+                    "contact_name": d.get("contact_name",""),
+                    "vehicle_interest": d.get("vehicle",""),
+                    "campaign": d.get("campaign",""),
+                    "notes": d.get("notes",""),
+                    "priority": d.get("priority","NORMAL"),
+                }
+
+        # Check leads — returning caller?
+        leads = list(db.collection("leads")
+                     .where("phone", "==", phone)
+                     .order_by("ts", direction="DESCENDING")
+                     .limit(3).stream())
+        if leads:
+            last = leads[0].to_dict()
+            return {
+                "known": True,
+                "type": "returning_lead",
+                "company": "",
+                "contact_name": "",
+                "vehicle_interest": last.get("message","")[:100],
+                "notes": f"Previously asked: {last.get('message','')}",
+                "priority": "WARM",
+            }
+
+    except Exception as e:
+        print(f"[lookup_caller] {e}")
+
+    return {"known": False, "type": "unknown", "company": "", "notes": ""}
+
+
+def build_caller_context(caller_info: dict) -> str:
+    """Build a short context string injected into Audry's prompt."""
+    if not caller_info.get("known"):
+        return ""
+    lines = ["\n\n[CALLER CONTEXT — use this to personalize your response]"]
+    if caller_info.get("company"):
+        lines.append(f"  Caller is from: {caller_info['company']}")
+    if caller_info.get("contact_name"):
+        lines.append(f"  Contact name: {caller_info['contact_name']}")
+    if caller_info.get("vehicle_interest"):
+        lines.append(f"  Vehicle interest: {caller_info['vehicle_interest']}")
+    if caller_info.get("tier"):
+        lines.append(f"  Dealer tier: {caller_info['tier']}")
+    if caller_info.get("notes"):
+        lines.append(f"  Notes: {caller_info['notes']}")
+    if caller_info.get("type") == "bat_partners":
+        lines.append("  This is a BaT/auction partner — use BaT partner script.")
+    if caller_info.get("type") == "returning_lead":
+        lines.append("  This caller has contacted us before — acknowledge warmly.")
+    lines.append("[END CALLER CONTEXT]")
+    return "\n".join(lines)
+
+
 def log_lead(phone: str, channel: str, message: str, reply: str):
     """Log inbound contact to Firestore for lead tracking."""
     try:
@@ -314,8 +400,14 @@ async def handle_sms(request: Request):
     session = get_session(from_number)
     history = session.get("history", [])
     
-    # Generate Audry's response
-    reply = gemini_respond(body, history, channel="sms")
+    # Look up caller and generate Audry's response
+    caller_info = lookup_caller(from_number)
+    caller_ctx = build_caller_context(caller_info)
+    reply = gemini_respond(body, history, channel="sms", caller_context=caller_ctx)
+    # Tag lead with caller info
+    if caller_info.get("known"):
+        session["caller_company"] = caller_info.get("company","")
+        session["caller_type"] = caller_info.get("type","")
     
     # Update history
     history.append({"role": "user", "parts": [body]})

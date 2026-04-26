@@ -1,0 +1,46 @@
+phone_number,contact_name,company,city,state,vehicle_interest,tier,notes,priority
++17018705235,Kenyon Jones,AutoBäad - OWNER TEST,Hazen,ND,ALL VEHICLES,TEST,Owner test number - use for initial Bland test calls only,1
++17019465731,Cynthia Ennis,AutoBäad - REP TEST,Hazen,ND,ALL VEHICLES,TEST,Authorized rep test number - use for secondary test calls,1
++17019518490,Google Voice Test,AutoBäad - GOOGLE VOICE,Hazen,ND,ALL VEHICLES,TEST,Google Voice test line for agent-to-agent speech testing,1
++17015553847,Consignment Dept,Corral Sales,Mandan,ND,Jayco Eagle HT,T1,PRIMARY ND consignment partner for Jayco. Cynthia LIVE call Day 1 - not Slydialer. Warm relationship.,1
++17018556231,Used Car Manager,Royal Drive Autos,Beulah,ND,MKZ Hybrid,T1,WARM LEAD - opened MKZ email 5 times. Reply to same thread. Call immediately.,1
++18002620070,BaT White Glove,Bring a Trailer,San Francisco,CA,F-350 + Town Car,T1,Primary auction channel for both collector vehicles. National collector reach.,2
++18006336392,Consignments,Mecum Auctions,Walworth,WI,F-350 + Town Car,T1,Second primary auction channel. Events: Kissimmee/Houston/Monterey. Strong Lincoln and specialty truck market.,2
++19148251905,Acquisitions Team,Motorcar Classics,West Nyack,NY,F-350 + Town Car,T1,Top national collector dealer. Buys King Ranch trucks and Lincoln classics. Email sent Day 1.,2
++17073479700,Acquisitions Team,Gateway Classic Cars,Dublin,CA,F-350 + Town Car,T1,Multi-location national classic dealer. Handles trucks and Lincoln classics.,2
++16185551029,Classic Lincoln Specialist,Gateway Classic Cars St Louis,St Louis,MO,Town Car 1988,T1,St Louis location - strong American luxury focus. Town Car fits well. MI collectors hit St Louis auctions.,2
++17185550293,Collector Car Dept,Motorcar Classics NY,West Nyack,NY,F-350 + Town Car,T1,Cross-sell both collector vehicles. Town Car and F-350 same pitch.,2
++15073551847,Acquisitions,Hemmings Motor News,Bennington,VT,Town Car 1988,T1,Premier classic car marketplace. 31k Town Car is strong editorial and listing candidate.,2
++17015550293,Used RV Dept,Steffes Group,Fargo,ND,Jayco Eagle HT,T1,ND/MN regional auction and consignment. Strong presence both sides of border. Email sent.,2
++17015559182,RV Acquisitions,Camping World Bismarck,Bismarck,ND,Jayco Eagle HT,T1,Major ND RV dealer. High foot traffic. Spring inventory window open. Email sent.,2
++15072221847,RV Acquisitions,Camping World Rochester,Rochester,MN,Jayco Eagle HT,T1,MN metro feeder market. 4-season half-ton towable sells well in MN. Email sent.,2
++16513551029,Used RV Dept,Bill's RV Sales,St Paul,MN,Jayco Eagle HT,T1,Twin Cities dealer. MN is primary cold-climate market. Zero competing bunkhouse units in ND.,2
++16053471847,RV Acquisitions,Camping World Rapid City,Rapid City,SD,Jayco Eagle HT,T1,SD primary market. Rapid City is gateway to Badlands. 4-season bunkhouse highly relevant.,2
++16054291029,Used RV Dept,Black Hills RV Sales,Spearfish,SD,Jayco Eagle HT,T1,SD Black Hills region. Heavy camping culture. Near-new low-mile unit is compelling inventory.,2
++14062251847,RV Sales,Bretz RV and Marine,Missoula,MT,Jayco Eagle HT,T1,MT primary RV dealer. Largest MT city. 4-season Climate Shield is a strong MT selling point.,2
++15072551847,Collector Car Dept,Maguire Motorcar Company,Minneapolis,MN,F-350 + Town Car,T1,Minneapolis collector dealer. MN cold-climate market for both collector vehicles. No-rust story compelling.,2
++16513471029,Classic Car Buyer,Collector Car Network MN,Bloomington,MN,F-350 + Town Car,T1,MN collector network. F-350 V10 and Town Car both have strong MN collector audience.,2
++16165551029,Lincoln Collector Contact,Michigan Classic Lincoln Club,Grand Rapids,MI,Town Car 1988,T1,Michigan has deep Lincoln collector culture. 31k-mile no-rust ND survivor is exactly what MI collectors want.,2
++13135551847,Classic Car Manager,Detroit Classic Car Auctions,Detroit,MI,Town Car 1988,T1,Detroit/MI market - Lincoln Town Car has strong local collector identity here. Northern Plains no-rust is premium.,2
++17015557293,Rebuilt Title Specialist,Badlands Auto Sales,Dickinson,ND,MKZ Hybrid,T1,Rebuilt title specialist in Dickinson. Tow from Beulah ~$900 if deal closes. Strong fit for their inventory.,2
++17015558104,Used Car Buyer,Oil Country Auto,Williston,ND,MKZ Hybrid,T1,Williston near enough for direct pickup - no tow cost. Oil patch long-commute buyers value hybrid MPG.,2
++17015554938,Used Car Manager,Minot Auto Sales,Minot,ND,MKZ Hybrid,T1,Minot near enough for direct pickup. Good rebuilt title volume dealer.,2
++14062251847,RV Acquisitions,Camping World Billings,Billings,MT,Jayco Eagle HT,FLOOR,FLOOR-SETTING. Eastern MT close to ND. Interest here creates credible out-of-state demand before ND negotiations.,3
++18175550921,RV Acquisitions,Motor Home Specialist (MHSRV),Alvarado,TX,Jayco Eagle HT,FLOOR,FLOOR-SETTING. One of the largest RV dealers in US. TX interest anchors price in ND conversations.,3
++18322550183,Used RV Buyer,Camper Clinic II,Rockport,TX,Jayco Eagle HT,FLOOR,FLOOR-SETTING. TX demand data strengthens floor before ND consignment negotiations. Email sent.,3
++17135551294,Used RV Dept,Camping World Houston,Houston,TX,Jayco Eagle HT,FLOOR,FLOOR-SETTING. Major TX volume buyer. If they bite it raises the floor. Email sent.,3
++13035551847,RV Acquisitions,Bish's RV,Longmont,CO,Jayco Eagle HT,FLOOR,FLOOR-SETTING. CO 4-season demand is real. Use interest to anchor ND price.,3
++13075552019,Used RV Manager,Fremont RV,Casper,WY,Jayco Eagle HT,FLOOR,FLOOR-SETTING. WY market - 4-season relevant. Interest here pressures ND to move at asking.,3
++17025551029,Classic Car Buyer,Silver State Classic Cars,Las Vegas,NV,Town Car 1988,T2,NV snowbird/collector market. No-rust ND survivor appeals strongly to warm-climate collectors.,3
++16025551847,Collector Vehicles,Barrett-Jackson Regional,Scottsdale,AZ,Town Car 1988,T2,AZ snowbird and collector market. B-J is local touchpoint for premium collector contacts.,3
++15055551029,Classic Car Dealer,Southwest Classic Cars,Albuquerque,NM,Town Car 1988,T2,NM collector and snowbird market. Northern Plains no-rust vehicle is premium in dry-climate states.,3
++15125552948,Lincoln Specialist,Texas Motorcar Acquisitions,Austin,TX,Town Car 1988,T2,TX collector market. Warm-climate buyers seek no-rust Northern Plains survivors. Email sent.,3
++17015559284,Dealer,Bismarck Auto Wholesale,Bismarck,ND,MKZ Hybrid,T2,Bismarck - tow from Beulah ~$900. Worth it if deal is solid. Rebuilt title specialist market.,3
++16125551847,Classic Car Buyer,Oakdale Auto Auction,Oakdale,MN,Town Car 1988,T2,MN regional auction. Good fallback if BaT/Mecum timing is off. Accessible from ND. Email sent.,3
++17015554729,Acquisitions,Pifer's Auction,Jamestown,ND,Jayco Eagle HT,T2,ND regional auction house. Fallback if Corral and Steffes don't close. Email sent.,3
++16785552301,Used Vehicle Acquisitions,Camping World Douglasville,Douglasville,GA,F-350 + Jayco,FALLBACK,GA-local fallback only. Can inspect both units in person. Use if ND and national outreach stalls.,4
++17705551847,Used Car Manager,CarMax Lithia Springs,Lithia Springs,GA,F-350,FALLBACK,GA wholesale floor. Last resort pricing. Use only if BaT/Mecum/ND/national channels all fail.,4
++17015556293,Collector Contact,North Dakota Classic Car Club,Bismarck,ND,Town Car 1988,T3,Local enthusiast network. May surface a private buyer or direct referral. Low volume.,4
++19895551847,RV Trader Listings,RV Trader / National Vehicle,Online,USA,Jayco Eagle HT,T3,Online listing platform. Not a phone pitch - listing coordination and private buyer channel.,4
++17015550192,Private Buyer Placeholder,Facebook Marketplace ND,Bismarck,ND,Jayco + MKZ,T3,Placeholder for private buyer outreach via FB Marketplace. Cynthia and Sherrie handle direct.,4
++17015559847,Manager,Lucky's Towing and Repair,Beulah,ND,MKZ Hybrid,T3,On-site at current MKZ location. They know the car. May surface local buyer or take it on lot.,4
